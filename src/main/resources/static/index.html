@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Сборщик иллюстраций</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="ambient" aria-hidden="true">
+  <i class="orb o1"></i><i class="orb o2"></i><i class="orb o3"></i>
+</div>
+
+<header class="top">
+  <h1><span class="logo" aria-hidden="true"></span>Сборщик иллюстраций</h1>
+  <button type="button" id="llm-badge" class="badge" aria-haspopup="dialog"></button>
+</header>
+
+<div class="layout">
+  <aside class="panel" id="panel">
+    <section class="card">
+      <h2>Автосборка</h2>
+      <div class="tabs" role="tablist">
+        <button type="button" id="tab-metaphor" class="tab active" role="tab" aria-selected="true">По метафоре</button>
+        <button type="button" id="tab-names" class="tab" role="tab" aria-selected="false">По названиям</button>
+      </div>
+      <textarea id="query" rows="2" maxlength="300" placeholder="Например: рост финансов"></textarea>
+      <p id="hint" class="hint"></p>
+      <button type="button" id="compose" class="primary wide">Собрать</button>
+      <p id="status" class="status" role="status"></p>
+    </section>
+
+    <section class="card">
+      <h2>Параметры</h2>
+      <div class="row2">
+        <label>Размер
+          <select id="size"></select>
+        </label>
+        <label>Шаблон
+          <select id="layout"></select>
+        </label>
+      </div>
+      <label class="check"><input type="checkbox" id="background" checked> Фоновые объекты под главными</label>
+      <label>Цветовая схема
+        <select id="palette"></select>
+      </label>
+      <div id="swatches" class="swatches" aria-hidden="true"></div>
+      <details>
+        <summary>Загрузить свою палитру</summary>
+        <div class="custom" id="custom"></div>
+        <button type="button" id="add-palette">Добавить палитру</button>
+      </details>
+    </section>
+
+    <section class="card">
+      <h2>Библиотека</h2>
+      <p class="hint">Нажмите, чтобы добавить на холст: главный объект и его фоновая версия.</p>
+      <div id="library" class="library"></div>
+    </section>
+  </aside>
+
+  <main class="stage" id="stage">
+    <div class="scene" id="scene">
+      <div class="board" id="board">
+        <div class="board-bg" id="board-bg"></div>
+        <div class="items" id="items"></div>
+      </div>
+    </div>
+
+    <div class="dock" id="dock">
+      <label>Поворот <input type="range" id="rotation" min="-180" max="180" step="1" disabled></label>
+      <label>Масштаб <input type="range" id="scale" min="5" max="300" step="1" disabled></label>
+      <span class="sep" aria-hidden="true"></span>
+      <button type="button" id="duplicate" disabled>Дублировать</button>
+      <button type="button" id="forward" disabled>Выше</button>
+      <button type="button" id="backward" disabled>Ниже</button>
+      <button type="button" id="remove" disabled>Удалить</button>
+      <span class="sep" aria-hidden="true"></span>
+      <button type="button" id="clear">Очистить</button>
+      <button type="button" id="explode" aria-pressed="false">Раздвинуть слои</button>
+      <button type="button" id="export" class="primary">Скачать SVG</button>
+    </div>
+    <p class="stage-hint" id="stage-hint">Перетаскивайте объекты мышью, Delete удаляет выбранный. Всё, что выходит за границу холста, в файл не попадёт.</p>
+  </main>
+</div>
+<dialog id="llm-dialog" aria-labelledby="llm-title">
+  <form method="dialog" id="llm-form">
+    <h3 id="llm-title">Подключение ИИ</h3>
+    <p class="hint">ИИ подбирает объекты по смыслу. Подойдёт любая модель: локальная (Ollama, LM Studio) или по ключу (OpenRouter, OpenAI, Anthropic). Ключ хранится только в памяти сервера до перезапуска и в браузер не возвращается.</p>
+    <label>Сервис
+      <select id="llm-provider"></select>
+    </label>
+    <label>Адрес API
+      <input id="llm-url" type="url" autocomplete="off" spellcheck="false">
+    </label>
+    <label>Модель
+      <input id="llm-model" list="llm-models" autocomplete="off" spellcheck="false">
+      <datalist id="llm-models"></datalist>
+    </label>
+    <label id="llm-key-row">Ключ API
+      <input id="llm-key" type="password" autocomplete="off" spellcheck="false">
+    </label>
+    <p id="llm-msg" class="status" role="status"></p>
+    <div class="actions">
+      <button type="button" id="llm-save" class="primary">Проверить и подключить</button>
+      <button type="button" id="llm-off">Отключить</button>
+      <button type="submit">Закрыть</button>
+    </div>
+  </form>
+</dialog>
+<script src="app.js"></script>
+</body>
+</html>

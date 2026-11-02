@@ -1,0 +1,11 @@
+[
+  {"id": "purple", "name": "Сиреневая",
+   "bgLight": "#D7CDF5", "bgMid": "#AA9BF0", "bgDark": "#7864D7",
+   "objA": "#F9ECB0", "objB": "#F9A3AA", "objC": "#FFE3E1"},
+  {"id": "orange", "name": "Персиковая",
+   "bgLight": "#FDD7B9", "bgMid": "#FAC896", "bgDark": "#D27532",
+   "objA": "#F9ECB0", "objB": "#80DADA", "objC": "#BEEBEB"},
+  {"id": "teal", "name": "Бирюзовая",
+   "bgLight": "#BEEBEB", "bgMid": "#80DADA", "bgDark": "#5ABEBE",
+   "objA": "#FFD4F2", "objB": "#6D7BFC", "objC": "#B6C6FE"}
+]
