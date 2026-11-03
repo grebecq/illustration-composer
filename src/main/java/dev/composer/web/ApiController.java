@@ -10,6 +10,8 @@ import dev.composer.service.LayoutService;
 import dev.composer.service.LibraryService;
 import dev.composer.service.PaletteService;
 import dev.composer.service.SvgRenderer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -22,7 +24,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,6 +40,9 @@ import java.util.Map;
 public class ApiController {
 
     private static final MediaType SVG = MediaType.parseMediaType("image/svg+xml");
+    private static final Logger log = LoggerFactory.getLogger(ApiController.class);
+    private static final Path USAGE_LOG = Path.of("usage.log");
+    private static final DateTimeFormatter USAGE_TIME = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     private final LibraryService library;
     private final PaletteService palettes;
@@ -67,7 +78,18 @@ public class ApiController {
         out.put("canvas", Map.of("w", SvgRenderer.WIDTH, "h", SvgRenderer.HEIGHT));
         out.put("dims", dims);
         out.put("llm", composer.llmAvailable());
+        usage("open страница открыта");
         return out;
+    }
+
+    /** Журнал использования: когда и что делали на странице. Пишется в usage.log рядом с сервером. */
+    private void usage(String format, Object... args) {
+        String line = LocalDateTime.now().format(USAGE_TIME) + " " + String.format(format, args) + System.lineSeparator();
+        try {
+            Files.writeString(USAGE_LOG, line, StandardCharsets.UTF_8, StandardOpenOption.CREATE, StandardOpenOption.APPEND);
+        } catch (IOException e) {
+            log.warn("Не удалось записать usage.log: {}", e.getMessage());
+        }
     }
 
     @GetMapping("/asset/{size}/{id}/{variant}")
@@ -84,7 +106,12 @@ public class ApiController {
 
     @PostMapping("/compose")
     public ComposeResult compose(@RequestBody ComposeRequest request) {
-        return composer.compose(request);
+        long start = System.nanoTime();
+        ComposeResult result = composer.compose(request);
+        usage("compose mode=%s query=\"%s\" source=%s picked=%s %d мс%s", request.mode(), request.query(),
+                result.source(), result.picked(), (System.nanoTime() - start) / 1_000_000,
+                result.llmError() == null ? "" : " llmError=" + result.llmError());
+        return result;
     }
 
     @PostMapping("/render")
@@ -95,6 +122,7 @@ public class ApiController {
     @PostMapping("/export")
     public ResponseEntity<byte[]> export(@RequestBody Composition composition) {
         byte[] body = renderer.render(composition).getBytes(StandardCharsets.UTF_8);
+        usage("export объектов=%d", composition.items().size());
         return ResponseEntity.ok()
                 .contentType(SVG)
                 .header(HttpHeaders.CONTENT_DISPOSITION,
