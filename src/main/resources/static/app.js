@@ -148,6 +148,10 @@ function renderLlmBadge() {
   badge.textContent = on ? `ИИ: ${llmLabel()}` : 'Подключить ИИ';
   badge.title = on ? 'Подбор по метафоре идёт через эту модель. Нажмите, чтобы изменить'
     : 'Без ИИ объекты подбираются по тегам. Нажмите, чтобы подключить модель';
+  if (llm.info && llm.info.locked) {
+    badge.disabled = true;
+    badge.title = 'Настройки ИИ закрыты на время показа';
+  }
 }
 
 function llmMessage(text, isError) {

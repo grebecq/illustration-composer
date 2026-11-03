@@ -4,6 +4,8 @@ import dev.composer.picker.LlmException;
 import dev.composer.picker.LlmPicker;
 import dev.composer.service.LlmSettings;
 import dev.composer.service.LlmSettings.Config;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -12,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -29,9 +32,20 @@ public class LlmController {
     private final LlmSettings settings;
     private final LlmPicker picker;
 
-    public LlmController(LlmSettings settings, LlmPicker picker) {
+    private final boolean locked;
+
+    public LlmController(LlmSettings settings, LlmPicker picker,
+                         @Value("${composer.llm.locked:false}") boolean locked) {
         this.settings = settings;
         this.picker = picker;
+        this.locked = locked;
+    }
+
+    /** Для публичного показа: подключённую модель можно использовать, но нельзя менять. */
+    private void requireUnlocked() {
+        if (locked) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Настройки ИИ закрыты");
+        }
     }
 
     @GetMapping
@@ -41,12 +55,14 @@ public class LlmController {
 
     @PutMapping
     public Map<String, Object> save(@RequestBody Settings s) {
+        requireUnlocked();
         settings.save(s.provider(), s.baseUrl(), s.model(), s.apiKey());
         return describe();
     }
 
     @DeleteMapping
     public Map<String, Object> disconnect() {
+        requireUnlocked();
         settings.disconnect();
         return describe();
     }
@@ -54,6 +70,7 @@ public class LlmController {
     /** Реальный запрос к модели: проверяет адрес, ключ и то, что модель отвечает по делу. */
     @PostMapping("/test")
     public Map<String, Object> test() {
+        requireUnlocked();
         Map<String, Object> out = new LinkedHashMap<>();
         try {
             List<String> ids = picker.pickOrThrow("обучение и финансы", 3);
@@ -68,6 +85,7 @@ public class LlmController {
 
     @GetMapping("/models")
     public List<String> models(@RequestParam String provider) {
+        requireUnlocked();
         return settings.localModels(provider);
     }
 
@@ -75,6 +93,7 @@ public class LlmController {
         Map<String, Object> out = new LinkedHashMap<>();
         Config c = settings.current().orElse(null);
         out.put("connected", c != null);
+        out.put("locked", locked);
         if (c != null) {
             out.put("provider", c.provider());
             out.put("providerName", settings.preset(c.provider()).name());
