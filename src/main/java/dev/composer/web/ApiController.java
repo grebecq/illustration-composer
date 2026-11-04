@@ -85,6 +85,7 @@ public class ApiController {
     /** Журнал использования: когда и что делали на странице. Пишется в usage.log рядом с сервером. */
     private void usage(String format, Object... args) {
         String line = LocalDateTime.now().format(USAGE_TIME) + " " + String.format(format, args) + System.lineSeparator();
+        log.info("usage {}", line.strip());
         try {
             Files.writeString(USAGE_LOG, line, StandardCharsets.UTF_8, StandardOpenOption.CREATE, StandardOpenOption.APPEND);
         } catch (IOException e) {
