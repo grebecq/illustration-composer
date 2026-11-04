@@ -119,7 +119,8 @@ public class LlmPicker implements ObjectPicker {
         ObjectNode root = mapper.createObjectNode();
         root.put("model", c.model());
         root.put("temperature", 0);
-        root.put("max_tokens", 200);
+        // моделям с «рассуждением» нужен запас: иначе все токены уходят на размышления, а ответ пустой
+        root.put("max_tokens", 3000);
         ArrayNode messages = root.putArray("messages");
         messages.addObject().put("role", "system").put("content", SYSTEM);
         messages.addObject().put("role", "user").put("content", prompt);
