@@ -130,7 +130,7 @@ public class LlmPicker implements ObjectPicker {
     private ObjectNode anthropicBody(Config c, String prompt) {
         ObjectNode root = mapper.createObjectNode();
         root.put("model", c.model());
-        root.put("max_tokens", 200);
+        root.put("max_tokens", 3000);
         root.put("system", SYSTEM);
         root.putArray("messages").addObject().put("role", "user").put("content", prompt);
         return root;
